@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block page_content %}
+    <table class="table table-bordered table-responsive">
+      <thead>
+        <tr class="info">
+          <th>名称</th>
+          <th>管理者手机号</th>
+          <th>类型</th>
+            <th>成员数目</th>
+            <th>余额</th>
+            <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for group in groups%}
+
+            <tr>
+                <td>{{ group.name }}</td>
+                <td>{{ group.Owner.telephone }}</td>
+                <td>unKnow</td>
+                <td>{{ member.query.filter_by(Group=group).count() }}</td>
+                <td>{{ group.get_balance() }}</td>
+                <td><a class="btn btn-success" href="{{ url_for("manage.group_charge", group_id=b(s=str(group.id).encode('utf-8'))) }}">充值</a>
+                    <a class="btn btn-info"href="{{ url_for("manage.group_manage", group_id=b(s=str(group.id).encode('utf-8'))) }}">成员管理</a> </td>
+            </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+{% endblock %}

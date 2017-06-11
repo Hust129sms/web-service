@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block scripts %}
+    {{ super() }}
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.js"></script>
+<script src="{{ url_for('static',filename='jquery-cloneya.js') }}"></script>
+<script>
+     $('.clone-wrapper').cloneya({
+            limit       : 999,
+            cloneThis       : '.toclone',
+            valueClone      : false,
+            dataClone       : false,
+            deepClone       : false,
+            cloneButton     : '.clone',
+            deleteButton    : '.delete',
+            clonePosition   : 'after',
+            serializeID         : true
+        });
+$('.add-row').live('click',function(){
+   //增添一个新行
+    var cloneTR = $('#table tr:last').clone(true);
+    $('#table tr:last').after(cloneTR);
+    //改变序号
+    var i = $('#table tr').index($(this).parents('tr'));
+    $('#table tr:last td:first').text(i)
+}); //加号点击事件
+</script>
+{% endblock %}
+{% block page_content %}
+<div id="simple-clone" class="clone-wrapper">
+    <form class="form" method="post">
+    <table class="table table-bordered table-responsive">
+      <thead>
+        <tr class="info">
+            <th>编号</th>
+          <th>姓名</th>
+          <th>手机号</th>
+            <th>其他</th>
+            <th>操作</th>
+        </tr>
+      </thead>
+
+      <tbody>
+                {% for member in members %}
+                    <tr class="toclone">
+                    <td class="id">{{ member.id }}</td>
+                    <td class="name">
+                        <input type="text" name="name[]" id="sname" value="{{ member.name }}"/>
+                    </td>
+                    <td class="email">
+                        <input type="text" name="tel[]" id="semail" value="{{ member.tel }}" />
+                    </td>
+                    <td class="web">
+                        <input type="text" name="address[]" id="sweb" value="{{ member.address }}" />
+                    </td>
+                    <td><a href="#" class="btn btn-info add-row clone">+</a>
+                    <a href="#" class="btn btn-danger delete">-</a></td>
+                </tr>
+                {% endfor %}
+                <tr class="toclone">
+                    <td class="index">{{ i }}</td>
+                    <td class="name">
+                        <input type="text" name="name[]" id="sname" />
+                    </td>
+                    <td class="email">
+                        <input type="text" name="tel[]" id="semail" />
+                    </td>
+                    <td class="web">
+                        <input type="text" name="address[]" id="sweb" value="" />
+                    </td>
+                    <td><a href="#" class="btn btn-info add-row clone">+</a>
+                    <a href="#" class="btn btn-danger delete">-</a></td>
+
+                </tr>
+
+
+      </tbody>
+    </table>
+                        <p class="submit">
+                    <input type="submit" value="保存" /></form></div>
+{% endblock %}

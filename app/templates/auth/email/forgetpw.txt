@@ -1,0 +1,7 @@
+亲爱的{{ user.username }},
+    欢迎使用飞羽Fiiyu！
+请点击以下链接找回密码：
+url_for('auth.forget_password', email=user.email , token=token, _external=True)
+
+飞羽运营团队
+

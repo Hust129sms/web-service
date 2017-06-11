@@ -1,0 +1,6 @@
+亲爱的{{ user.username }},
+    欢迎使用飞羽Fiiyu！
+请点击以下链接激活：
+{{ url_for('manage.confirm', token=token, _external=True) }}
+
+飞羽运营团队

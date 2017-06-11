@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}飞羽Fiiyu - 用户登录{% endblock %}
+{% block page_content %}
+{{ wtf.quick_form(form) }}
+    <p></p>忘记密码？<a href="{{ url_for('auth.forget_password') }}">点我</a>找回密码<p></p>
+{% endblock %}

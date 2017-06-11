@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}飞羽Fiiyu - 激活{% endblock %}
+{% block page_content %}
+    <!--<form method="POST">
+        {% for subfield in form.confirm_type %}
+            <tr>
+                <td>{{ subfield }}</td>
+                <td>{{ subfield.label }}</td>
+            </tr>
+        {% endfor %}
+    <p></p>
+        {{ form.submit() }}
+    </form>-->
+    {{ wtf.quick_form(form) }}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block page_content %}
+    <a href="{{ url_for('manage.user_info') }}">个人信息维护</a>
+    <h2>上次登录时间</h2><h2 class="btn btn-info">{{ last_login_time }}</h2>
+{% if not current_user.email_confirmed %}
+<h1>您还未激活邮箱！</h1>
+{% endif %}
+    {% if not current_user.telephone_confirmed %}
+<h1>您还未激活手机！</h1>
+        <h1>圈子管理</h1>
+        <a href="{{ url_for('manage.create_group') }}" class="btn btn-success">创建圈子</a>
+        <a href="{{ url_for('manage.view_group') }}" class="btn btn-group">查看圈子</a>
+        <a href="{{ url_for('manage.create_group') }}" class="btn btn-danger">创建圈子</a>
+{% endif %}
+
+{% endblock %}

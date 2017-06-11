@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+    <h1>未认证用户啥都不能干！</h1><p></p>请<a href="{{ url_for('manage.confirm') }}">点击此处</a>进行认证！
+{% endblock %}
