@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block page_content %}
+    <table class="table table-bordered table-responsive">
+      <thead>
+        <tr class="info">
+          <th>订单编号</th>
+          <th>建立时间</th>
+          <th>金额</th>
+            <th>状态</th>
+            <th>支付时间</th>
+            <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bills in bill %}
+
+            <tr>
+                <td>{{ bills.id }}</td>
+                <td> {{ fmttime(bills.create_time) }}</td>
+                <td>{{ bills.amount }}</td>
+                <td>{% if bills.status == 1 %} 待支付{% elif bills.status == 2 %} 支付完成{% else %} 已取消 {% endif %}</td>
+                <td>{% if bills.finish_time != 0 %}{{ fmttime(bills.finish_time) }}{% else %}N/A{% endif %}</td>
+                <td>{% if bills.status == 1 %}<a class="btn btn-success btn-sm" href="#">继续支付</a>
+                    <a class="btn btn-danger btn-sm" href="#">取消订单</a>{% endif %} </td>
+            </tr>
+        {% else %}
+            <td colspan="999"><div class="text-center"><a href="{{ url_for("manage.create_group") }}" class="btn btn-primary">创建新圈子</a></div></td>
+        {% endfor %}
+      </tbody>
+    </table>
+{% endblock %}

@@ -57,7 +57,9 @@ class User(UserMixin, db.Model):
     student_card = db.Column(db.String(128), default='NULL')
     student_auth = db.Column(db.Boolean, default=False)
     owned_form_id = db.relationship('Form', backref='Owner')
-
+    balance_billing = db.relationship('Billing', backref='User')
+    personal_message = db.relationship('PersonalMessage', backref='To', lazy='dynamic',
+                                       primaryjoin='PersonalMessage.rec_id==User.uid')
     # 设置密码的可读属性
     @property
     def password(self):
@@ -112,7 +114,7 @@ class User(UserMixin, db.Model):
         return True
 
 #   生成手机验证码
-    def generate_confirmation_token_tel(self, expiration=300):
+    def generate_confirmation_token_tel(self):
         code_list = []
         # 检查距离上次发送短信的时间
         if int(time.time()) - self.telephone_confirmed_code_time < 59:
@@ -134,6 +136,9 @@ class User(UserMixin, db.Model):
             self.telephone_confirmed = True
             return True
         return False
+
+    def get_balance(self):
+        return str(self.balance/1000)
 
 
 class AnonymousUser(AnonymousUserMixin):
@@ -284,3 +289,24 @@ class FormData(db.Model):
         # adapt the form_data to new version
         pass
 
+
+class Billing(db.Model):
+    __tablename__ = 'money_billings'
+    id = db.Column(db.Integer, primary_key=True)
+    create_time = db.Column(db.Integer, default=time.time)
+    finish_time = db.Column(db.Integer, default=0)
+    status = db.Column(db.Integer, default=1)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.uid'))
+    amount = db.Column(db.Integer)
+    token = db.Column(db.String(128))
+
+
+class PersonalMessage(db.Model):
+    __tablename__ = 'pms'
+    id = db.Column(db.Integer, primary_key=True)
+    time = db.Column(db.Integer, default=time.time)
+    status = db.Column(db.Boolean, default=False)
+    rec_id = db.Column(db.Integer, db.ForeignKey('users.uid'))
+    from_id = db.Column(db.Integer, db.ForeignKey('users.uid'))
+    message = db.Column(db.Text)
+    title = db.Column(db.String(128))

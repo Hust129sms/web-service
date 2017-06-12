@@ -1,15 +1,15 @@
 from datetime import datetime
-from flask import render_template, session, redirect, url_for, request, flash, abort
+from flask import render_template, session, redirect, url_for, request, flash, abort, jsonify
 from flask_login import login_required, current_user
 from ..tools.mail_thread import send_email
 import base64
-from ..models import Group, db
+from ..models import Group, db, PersonalMessage
 import time
 from ..decorators import own_required
 
 from . import manage
 from .forms import EnableForm, CreateGroupForm
-from ..models import Group, Member
+from ..models import Group, Member, Billing
 from .. import db
 from ..models import User
 
@@ -131,7 +131,8 @@ def view_group():
 def group_charge(group_id):
     group_id = int(base64.b64decode(group_id))
     group = Group.query.get_or_404(group_id)
-    group.balance += 55
+    group.balance += 55 * 1000
+    current_user.balance -= 55 * 1000
     return "充值！%d" % group_id
 
 
@@ -161,3 +162,43 @@ def group_manage(group_id):
     return render_template("manage/group_manage.html",
                            members=Member.query.filter_by(Group=Group.query.get_or_404(group_id)).all())
 
+
+@manage.route("/charge", methods=["GET","POST"])
+@login_required
+def charge():
+    return render_template("manage/charge.html")
+
+
+@manage.route("/charge/<int:a>", methods=["GET", "POST"])
+@login_required
+def charge_with_amount(a):
+    if a <= 0:
+        return redirect(url_for("manage.charge"))
+    bill = Billing(amount=a, user_id=current_user.uid, token="test")
+    db.session.add(bill)
+    db.session.commit()
+    flash("订单创建成功！请支付！")
+    return redirect(url_for("manage.user_info"))
+    pass
+
+
+@manage.route("/charges/<string:token>")
+def charge_response(token):
+    bill = Billing.query.filter_by(token=token, status=1).first()
+    if bill is None:
+        return jsonify({"message": "error"})
+    bill.User.balance += bill.amount * 1000
+    bill.status = 2
+    bill.finish_time = time.time()
+    pm = PersonalMessage(rec_id=bill.User.uid, from_id=0, message="您已充值成功！%d元已存入您的账户！", title="充值成功")
+    db.session.add(pm)
+    return jsonify({"message": "success",
+                    "uid": bill.User.uid,
+                    "amount": bill.amount})
+
+
+@manage.route("/charge_billing")
+@login_required
+def view_billings():
+    bill = Billing.query.filter_by(User=current_user).all()
+    return render_template("manage/view_billings.html", bill=bill)

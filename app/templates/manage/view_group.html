@@ -17,13 +17,19 @@
             <tr>
                 <td>{{ group.name }}</td>
                 <td>{{ group.Owner.telephone }}</td>
-                <td>unKnow</td>
+                <td>{{ group.type }}</td>
                 <td>{{ member.query.filter_by(Group=group).count() }}</td>
                 <td>{{ group.get_balance() }}</td>
                 <td><a class="btn btn-success" href="{{ url_for("manage.group_charge", group_id=b(s=str(group.id).encode('utf-8'))) }}">充值</a>
                     <a class="btn btn-info"href="{{ url_for("manage.group_manage", group_id=b(s=str(group.id).encode('utf-8'))) }}">成员管理</a> </td>
             </tr>
+        {% else %}
+            <td colspan="999" class="text-center"><div class="label label-danger">您当前还未建立组织！</div></td>
         {% endfor %}
+            <tr>
+                <td colspan="999"><div class="text-center"><a href="{{ url_for("manage.create_group") }}" class="btn btn-primary">创建新圈子</a></div></td>
+            </tr>
       </tbody>
     </table>
+
 {% endblock %}

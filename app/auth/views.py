@@ -3,7 +3,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 import time
 
 from . import auth
-from ..models import User, db
+from ..models import User, db, PersonalMessage
 from .forms import LoginForm, RegForm, ChangepasswordForm, ForgetpasswordForm, ResetpasswordForm
 from ..tools.mail_thread import send_email
 
@@ -48,6 +48,8 @@ def logout():
 @auth.route('/reg', methods=['GET', 'POST'])
 def reg():
     form = RegForm()
+    if current_user.is_authenticated:
+        return redirect(url_for("manage.console"))
     if form.validate_on_submit():
         user = User(email=form.email.data,
                     username=form.username.data,
@@ -55,6 +57,9 @@ def reg():
                     telephone=form.telephone.data)
         db.session.add(user)
         db.session.commit()
+        pm = PersonalMessage(rec_id=user.uid, from_id=0, message="亲爱的%s您已经完成了注册，请及时激活邮箱以便获得正常的访问权限！" % user.username,
+                             title="系统提示")
+        db.session.add(pm)
         flash(u"注册成功！")
         # user = User.query.filter_by(email=form.email.data).first()
         # 注册完成后直接登录
@@ -74,6 +79,10 @@ def change_password():
         if current_user.verify_password(form.old_password.data):
             current_user.password = form.new_password.data
             flash(u"密码已经成功修改，你的账户会进入3小时保护状态！期间进行敏感操作会被拦截。")
+            pm = PersonalMessage(rec_id=current_user.uid, from_id=0,
+                                 message="亲爱的%s您已经成功修改了密码！" % user.username,
+                                 title="系统提示")
+            db.session.add(pm)
     return render_template('auth/changepw.html', form=form, user=current_user)
 
 

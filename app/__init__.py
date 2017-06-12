@@ -1,4 +1,4 @@
-from flask import Flask,render_template,redirect
+from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_mail import Mail
 from flask_moment import Moment
@@ -34,6 +34,9 @@ def create_app(config_name):
 
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint)
+
+    from .api_v1 import api_v1 as api_v1_blueprint
+    app.register_blueprint(api_v1_blueprint, url_prefix='/api_v1')
     # 注册蓝图
 
     return app

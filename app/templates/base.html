@@ -1,5 +1,5 @@
 {% extends "bootstrap/base.html" %}
-
+{{ moment.include_moment() }}
 {% block title %}飞羽Fiiyu{% endblock %}
 
 {% block navbar %}
@@ -17,11 +17,12 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li class="{% if request.endpoint == 'manage.index' %}active{% endif %}"><a href="/">主页</a></li>
+                <li class="{% if request.endpoint == 'manage.index' %}active{% endif %}"><a href="/"><i class="glyphicon glyphicon-th-large">主页</i></a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
                 <li><span class="navbar-text">欢迎回来，<a class="navbar-link" href="{{ url_for('manage.console') }}">{{ current_user.username }}</a></span></li>
+                    <li><span class="navbar-text"><a href="#">消息{% if current_user.personal_message.filter_by(status=0).count() != 0 %}<span class="label label-warning pull-right">{{ current_user.personal_message.filter_by(status=0).count() }}</span>{% endif %}</a> </span></li>
                     <li><a href="{{ url_for('manage.user_info') }}">个人管理</a> </li>
                 <li><a href="{{ url_for('auth.logout') }}">注销</a></li>
                 {% else %}
@@ -32,18 +33,63 @@
         </div>
     </div>
 </div>
-    <div class="bs-docs-sidebar">TEST</div>
+
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    {% for message in get_flashed_messages() %}
-        <div class="alert alert-warning">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            {{ message }}
+    <div class="container">
+        <div class="row">
+            {% if current_user.is_authenticated %}
+            <div class="col-md-2">
+                <ul id="main-nav" class="nav nav-tabs nav-stacked" style="">
+                    <li>
+                        <a href="#systemSetting" class="nav-header collapsed" data-toggle="collapse">
+                            <i class="glyphicon glyphicon-cog"></i>管理
+                            <span class="pull-right glyphicon glyphicon-chevron-down"></span>
+                            </a>
+                                <ul id="systemSetting" class="nav nav-list collapse secondmenu" style="height: 0px;">
+                                    <li><a href="{{ url_for("manage.user_info") }}" >&nbsp;&nbsp;<i class="glyphicon glyphicon-user"></i>用户管理</a></li>
+                                    <li {% if request.endpoint == "manage.view_group" %}class="btn-info"{% endif %}><a href="{{ url_for("manage.view_group") }}" >&nbsp;&nbsp;<i class="glyphicon glyphicon-certificate"></i>圈子管理</a> </li>
+                                    <li><a href="#">&nbsp;&nbsp;<i class="glyphicon glyphicon-th-list"></i>菜单管理</a></li>
+                                    <li><a href="#">&nbsp;&nbsp;<i class="glyphicon glyphicon-asterisk"></i>角色管理</a></li>
+                                    <li><a href="#">&nbsp;&nbsp;<i class="glyphicon glyphicon-edit"></i>修改密码</a></li>
+                                    <li><a href="#">&nbsp;&nbsp;<i class="glyphicon glyphicon-eye-open"></i>日志查看</a></li>
+                                </ul>
+                    </li>
+                    <li>
+                        <a href="#messageManager" class="nav-header collapsed" data-toggle="collapse">
+                            <i class="glyphicon glyphicon-envelope"></i>通知管理
+                            <span class="pull-right glyphicon glyphicon-chevron-down"></span>
+                            </a>
+                                <ul id="messageManager" class="nav nav-list collapse secondmenu" style="height: 0px;">
+                                    <li><a href="{{ url_for("manage.user_info") }}">&nbsp;&nbsp;<i class="glyphicon glyphicon-send"></i>发送通知</a></li>
+                                </ul>
+                    </li>
+                    <li>
+                        <a href="./plans.html"><i class="glyphicon glyphicon-credit-card"></i>物料管理</a>
+                    </li>
+                    <li><a href="./grid.html"><i class="glyphicon glyphicon-globe"></i>分发配置
+                    <span class="label label-warning pull-right">5</span>
+                    </a>
+                    </li>
+                    <li><a href="./charts.html"><i class="glyphicon glyphicon-calendar"></i>图表统计</a>
+                    </li>
+                    <li>
+                    <a href="#"><i class="glyphicon glyphicon-fire"></i>关于系统</a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        <div class="col-md-10">
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-warning">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{ message }}
+                </div>
+            {% endfor %}
+            {% block page_content %} {% endblock %}
         </div>
-    {% endfor %}
-    
-    {% block page_content %} {% endblock %}
+    </div>
 </div>
+
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block page_content %}
     <a href="{{ url_for('manage.user_info') }}">个人信息维护</a>
-    <h2>上次登录时间</h2><h2 class="btn btn-info">{{ last_login_time }}</h2>
+    <h2 class="label label-info pull-right">{{ last_login_time }}</h2><h2>上次登录时间</h2>
 {% if not current_user.email_confirmed %}
 <h1>您还未激活邮箱！</h1>
 {% endif %}

@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 66682617c2c7
+Revision ID: 1ed8b83b1737
 Revises: 
-Create Date: 2017-06-11 23:13:05.860223
+Create Date: 2017-06-12 23:30:15.726153
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '66682617c2c7'
+revision = '1ed8b83b1737'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -55,6 +55,29 @@ def upgrade():
     sa.Column('type', sa.Integer(), nullable=True),
     sa.Column('tel', sa.String(length=11), nullable=True),
     sa.ForeignKeyConstraint(['owner_id'], ['users.uid'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('money_billings',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('create_time', sa.Integer(), nullable=True),
+    sa.Column('finish_time', sa.Integer(), nullable=True),
+    sa.Column('status', sa.Integer(), nullable=True),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('amount', sa.Integer(), nullable=True),
+    sa.Column('token', sa.String(length=128), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.uid'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('pms',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('time', sa.Integer(), nullable=True),
+    sa.Column('status', sa.Boolean(), nullable=True),
+    sa.Column('rec_id', sa.Integer(), nullable=True),
+    sa.Column('from_id', sa.Integer(), nullable=True),
+    sa.Column('message', sa.Text(), nullable=True),
+    sa.Column('title', sa.String(length=128), nullable=True),
+    sa.ForeignKeyConstraint(['from_id'], ['users.uid'], ),
+    sa.ForeignKeyConstraint(['rec_id'], ['users.uid'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('admins',
@@ -117,6 +140,8 @@ def downgrade():
     op.drop_table('formdatas')
     op.drop_table('billings')
     op.drop_table('admins')
+    op.drop_table('pms')
+    op.drop_table('money_billings')
     op.drop_table('groups')
     op.drop_table('forms')
     op.drop_table('users')

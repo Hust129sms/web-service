@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block page_content %}
+    请选择充值金额：
+    <a href="{{ url_for("manage.charge_with_amount",a=6) }}" class="btn btn-primary">6元</a>
+    <a href="{{ url_for("manage.charge_with_amount",a=20) }}" class="btn btn-primary">20元</a>
+    <a href="{{ url_for("manage.charge_with_amount",a=50) }}" class="btn btn-primary">50元</a>
+    <a href="{{ url_for("manage.charge_with_amount",a=100) }}" class="btn btn-primary">100元</a>
+    <a href="{{ url_for("manage.charge_with_amount",a=200) }}" class="btn btn-primary">200元</a>
+{% endblock %}
