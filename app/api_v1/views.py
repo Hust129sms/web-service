@@ -4,7 +4,6 @@ from ..models import PersonalMessage, db
 from . import api_v1
 
 
-
 @api_v1.route("/get_message")
 @login_required
 def get_message():

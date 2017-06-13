@@ -84,6 +84,7 @@ def before_request():
     and request.endpoint[:14] != 'manage.confirm' \
     and request.endpoint[:19] != 'manage.unconfirmed' \
     and request.endpoint != 'static' \
+    and request.endpoint != 'api_v1.get_message' \
     and request.endpoint[:15] != 'manage.confirm_':
         print(request.endpoint[:16])
         return redirect(url_for('manage.unconfirmed'))
@@ -202,3 +203,5 @@ def charge_response(token):
 def view_billings():
     bill = Billing.query.filter_by(User=current_user).all()
     return render_template("manage/view_billings.html", bill=bill)
+
+

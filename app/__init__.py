@@ -37,6 +37,9 @@ def create_app(config_name):
 
     from .api_v1 import api_v1 as api_v1_blueprint
     app.register_blueprint(api_v1_blueprint, url_prefix='/api_v1')
+
+    from .form import form as form_blueprint
+    app.register_blueprint(form_blueprint)
     # 注册蓝图
 
     return app

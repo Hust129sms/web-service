@@ -56,7 +56,6 @@ class User(UserMixin, db.Model):
     charge_billing = db.relationship('ChargeRecord', backref='User')
     student_card = db.Column(db.String(128), default='NULL')
     student_auth = db.Column(db.Boolean, default=False)
-    owned_form_id = db.relationship('Form', backref='Owner')
     balance_billing = db.relationship('Billing', backref='User')
     personal_message = db.relationship('PersonalMessage', backref='To', lazy='dynamic',
                                        primaryjoin='PersonalMessage.rec_id==User.uid')
@@ -176,6 +175,7 @@ class Member(db.Model):
     name = db.Column(db.String(20))
     address = db.Column(db.String(128))
     gender = db.Column(db.Boolean)  # False 男   True 女
+    role_alias = db.Column(db.Integer, default=0)
 
     other = db.Column(db.Text)
 
@@ -192,7 +192,9 @@ class Group(db.Model):
     member = db.relationship('Member', backref='Group')
     image = db.Column(db.LargeBinary)
     type = db.Column(db.Integer)
+    role_json = db.Column(db.Text, default='{"-1":"所有者","5":"部长","0":"会员"}')
     tel = db.Column(db.String(11))
+    owned_form_id = db.relationship('Form', backref='Owner')
 
     def get_balance(self):
         return self.balance / 1000
@@ -261,7 +263,7 @@ class Form(db.Model):
     """
     __tablename__ = 'forms'
     id = db.Column(db.Integer, primary_key=True)
-    owner_id = db.Column(db.Integer, db.ForeignKey("users.uid"))
+    owner_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
     form_data = db.Column(db.Text)
     data = db.relationship("FormData", backref='Form')
 
@@ -270,6 +272,14 @@ class Form(db.Model):
         # TODO
         # Adapt form data for now data
         pass
+
+    @staticmethod
+    def get_by_fid(self, f_id):
+        return self.query.filter_by(id=f_id).first()
+
+    @staticmethod
+    def get_fid(self, f_id):
+        return f_id
 
 
 class FormData(db.Model):
