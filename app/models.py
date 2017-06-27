@@ -115,10 +115,10 @@ class User(UserMixin, db.Model):
 #   生成手机验证码
     def generate_confirmation_token_tel(self):
         code_list = []
-        # 检查距离上次发送短信的时间
+        # 检查距离上次发送短信的时间，防止短信轰炸
         if int(time.time()) - self.telephone_confirmed_code_time < 59:
             return False
-        for i in range(6):  # 0-9数字
+        for i in range(6):  # 生成0-9数字的短信验证码
             random_num = random.randint(0, 9)
             code_list.append(random_num)
         self.telephone_confirmed_code = ''.join(code_list)

@@ -24,6 +24,11 @@ def get_message():
 @api_v1.route("/read_message/<int:m_id>")
 @login_required
 def read_message(m_id):
+    if m_id == 0:
+        pms = PersonalMessage.query.filter_by(rec_id=current_user.uid, status=False).all()
+        for pm in pms:
+            pm.status = True
+        return jsonify({'message': 'Marked all as read'})
     pms = PersonalMessage.query.filter_by(rec_id=current_user.uid, id=m_id).first()
     pms.status = True
     return jsonify({'message': 'marked as read'})

@@ -39,7 +39,7 @@
 {% block content %}
     <div class="container">
         <div class="row">
-            {% if current_user.is_authenticated %}
+            {% if current_user.is_authenticated and request.endpoint != 'manage.index' %}
             <div class="col-md-2">
                 <ul id="main-nav" class="nav nav-tabs nav-stacked" style="">
                     <li>
@@ -52,7 +52,7 @@
                                     <li {% if request.endpoint == "manage.view_group" %}class="btn-info"{% endif %}><a href="{{ url_for("manage.view_group") }}" >&nbsp;&nbsp;<i class="glyphicon glyphicon-certificate"></i>圈子管理</a> </li>
                                     <li><a href="#">&nbsp;&nbsp;<i class="glyphicon glyphicon-th-list"></i>菜单管理</a></li>
                                     <li><a href="#">&nbsp;&nbsp;<i class="glyphicon glyphicon-asterisk"></i>角色管理</a></li>
-                                    <li><a href="#">&nbsp;&nbsp;<i class="glyphicon glyphicon-edit"></i>修改密码</a></li>
+                                    <li><a href="{{ url_for("auth.change_password") }}">&nbsp;&nbsp;<i class="glyphicon glyphicon-edit"></i>修改密码</a></li>
                                     <li><a href="#">&nbsp;&nbsp;<i class="glyphicon glyphicon-eye-open"></i>日志查看</a></li>
                                 </ul>
                     </li>
