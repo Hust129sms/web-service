@@ -28,7 +28,6 @@ def create_form_p():
     return jsonify({"message": "success",
                     'code': 0})
 
-
 @form.route('/f/<string:f_id>', methods=['GET', 'POST'])
 def submit_form(f_id):
     if request.method == 'GET':

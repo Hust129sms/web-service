@@ -1,9 +1,17 @@
 {% extends "base.html" %}
 {% block page_content %}
+    <script>$('#amount').submit(function(){
+location.href='{{ url_for("manage.charge") }}/'+$('#a').val();
+return false;})
+    </script>
     请选择充值金额：
-    <a href="{{ url_for("manage.charge_with_amount",a=6) }}" class="btn btn-primary">6元</a>
-    <a href="{{ url_for("manage.charge_with_amount",a=20) }}" class="btn btn-primary">20元</a>
-    <a href="{{ url_for("manage.charge_with_amount",a=50) }}" class="btn btn-primary">50元</a>
-    <a href="{{ url_for("manage.charge_with_amount",a=100) }}" class="btn btn-primary">100元</a>
-    <a href="{{ url_for("manage.charge_with_amount",a=200) }}" class="btn btn-primary">200元</a>
+    <a href="{{ url_for("manage.charge",a=6) }}" class="btn btn-primary">6元</a>
+    <a href="{{ url_for("manage.charge",a=20) }}" class="btn btn-primary">20元</a>
+    <a href="{{ url_for("manage.charge",a=50) }}" class="btn btn-primary">50元</a>
+    <a href="{{ url_for("manage.charge",a=100) }}" class="btn btn-primary">100元</a>
+    <a href="{{ url_for("manage.charge",a=200) }}" class="btn btn-primary">200元</a>
+    <form id="amount" action="{{ url_for("manage.charge") }}">
+        <input name="a" placeholder="请输入自定义金额">
+        <input id="submit" type="submit" value="提交">
+    </form>
 {% endblock %}

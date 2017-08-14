@@ -26,7 +26,7 @@ class CreateGroupForm(FlaskForm):
     group_type = RadioField(u"圈子类型", validators=[DataRequired(message=u"请选择圈子类型以便我们提供更好的服务！")],
                             choices=[(1, u"管理层圈子"), (2, u"会员圈子"), (3, u"活动圈子")], coerce=int)
     tel = StringField(u"负责人电话", validators=[DataRequired(message=u'请填写负责人电话以便联系'),
-                                            Length(11, 11, message=u"请输入u正确的手机号码")])
+                                            Length(11, 11, message=u"请输入正确的手机号码")])
     image = FileField(u"上传圈子图片", validators=[FileAllowed(['png', 'jpg'], message=u"仅支持png格式和jpg格式的图片！")])
     submit = SubmitField(u"创建组织")
 

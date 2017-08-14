@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from ..tools.mail_thread import send_email
 import base64
 from ..models import Group, db, PersonalMessage
+from random import randint
 import time
 from ..decorators import own_required
 
@@ -34,11 +35,14 @@ def console():
         return redirect(url_for("manage.confirm", uid=current_user.get_id()))
     try:
         time_array = time.localtime(current_user.last_login_time)
-        otherStyleTime = time.strftime("%Y年%m月%d日 %H:%M:%S", time_array)
-    except:
-        otherStyleTime = "N/A"
+        otm = time.strftime("%Y %m %d %T", time_array)
+        # In order to against the strftime do not work
+        t1 = [otm[:4], '年', otm[5:7], '月', otm[8:10], '日 ', otm[-8:]]
+        otm = ''.join(t1)
 
-    return render_template("manage/console.html",last_login_time=otherStyleTime)
+    except:
+        otm = "N/A"
+    return render_template("manage/console.html", last_login_time=otm)
 
 
 @manage.route('/confirm/<token>')
@@ -164,23 +168,19 @@ def group_manage(group_id):
                            members=Member.query.filter_by(Group=Group.query.get_or_404(group_id)).all())
 
 
-@manage.route("/charge", methods=["GET","POST"])
+@manage.route("/charge", methods=["GET"])
 @login_required
 def charge():
-    return render_template("manage/charge.html")
-
-
-@manage.route("/charge/<int:a>", methods=["GET", "POST"])
-@login_required
-def charge_with_amount(a):
+    # return render_template("manage/charge.html")
+    a = request.args.get('a', default=-1, type=int)
     if a <= 0:
-        return redirect(url_for("manage.charge"))
-    bill = Billing(amount=a, user_id=current_user.uid, token="test")
+        return render_template("manage/charge.html")
+        # return redirect(url_for("manage.charge"))
+    bill = Billing(amount=a, user_id=current_user.uid, token="myrandomtoken" + str(randint(1, 999)) + str(time.time()))
     db.session.add(bill)
     db.session.commit()
-    flash("订单创建成功！请支付！")
+    flash("订单创建成功！请支付！%s" % bill.token)
     return redirect(url_for("manage.user_info"))
-    pass
 
 
 @manage.route("/charges/<string:token>")
