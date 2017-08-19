@@ -1,6 +1,6 @@
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, RecaptchaField
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, ValidationError
-from wtforms.validators import DataRequired, Length, Regexp, email, EqualTo
+from wtforms.validators import DataRequired, Length, Regexp, email, EqualTo, URL
 
 
 from ..models import User
@@ -14,6 +14,7 @@ class LoginForm(FlaskForm):
                                              Length(6, 64, message=u"密码长度不正确")],
                              render_kw={"placeholder": u"密码"})
     remember_me = BooleanField(u'记住登录状态')
+    recaptcha = RecaptchaField()
     submit = SubmitField(u'登录')
 
 
@@ -45,6 +46,7 @@ class RegForm(FlaskForm):
                                                    EqualTo("password", message=u"两次密码不一致，请检查输入！")],
                               render_kw={"placeholder": u"确认密码"}
                               )
+    recaptcha = RecaptchaField()
     submit = SubmitField(u'成为羽毛')
 
     @staticmethod
@@ -98,4 +100,5 @@ class ResetpasswordForm(FlaskForm):
     submit = SubmitField(u'确认修改')
 
 
-
+class OpenIDForm(FlaskForm):
+    openid = StringField('OpenID URL', validators=[DataRequired(), URL()])
