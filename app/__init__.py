@@ -63,6 +63,3 @@ def create_app(config_name):
     # 注册蓝图
 
     return app
-
-
-
