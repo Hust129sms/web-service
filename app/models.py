@@ -59,6 +59,8 @@ class User(UserMixin, db.Model):
     balance_billing = db.relationship('Billing', backref='User')
     personal_message = db.relationship('PersonalMessage', backref='To', lazy='dynamic',
                                        primaryjoin='PersonalMessage.rec_id==User.uid')
+    auth_token = db.Column(db.String(128))
+    auth_token_expire = db.Column(db.Integer, default=0)
     # 设置密码的可读属性
     @property
     def password(self):
@@ -184,6 +186,7 @@ class Member(db.Model):
 class Group(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
+    iid = db.Column(db.Integer, default=1)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.uid'))
     name = db.Column(db.String(128))
     admins = db.relationship('GroupAdmin', backref='Admin')
@@ -195,6 +198,7 @@ class Group(db.Model):
     role_json = db.Column(db.Text, default='{"-1":"所有者","5":"部长","0":"会员"}')
     tel = db.Column(db.String(11))
     owned_form_id = db.relationship('Form', backref='Owner')
+    member_c = db.Column(db.Integer, default=0)
 
     def get_balance(self):
         return self.balance / 1000
