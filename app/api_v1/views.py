@@ -105,7 +105,20 @@ def add_header_response(response):
 def get_balance(user, id=1):
     balance = user.balance / 100
     return jsonify({"balance": balance})
-    return jsonify({"message": "Authorization Fail!"}), 403
+
+
+@api_v1.route("/user", methods=['GET'])
+@auth_required
+def get_user_info(user):
+    data = [{
+        'email': user.email,
+        'telephone': user.telephone,
+        'email_c': user.email_confirmed,
+        'telephone_c': user.telephone_confirmed,
+        'last': user.last_login_time,
+        'student': user.student_auth,
+    }]
+    return jsonify(data)
 
 
 @api_v1.route("/groups", methods=['POST'])
