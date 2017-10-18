@@ -458,17 +458,37 @@
       <Position>19</Position>
       <DataType>DATETIME|0</DataType>
     </column>
-    <key id="122" parent="14">
+    <column id="122" parent="14" name="id_card">
+      <Position>20</Position>
+      <DataType>VARCHAR(18)|0</DataType>
+    </column>
+    <column id="123" parent="14" name="name">
+      <Position>21</Position>
+      <DataType>VARCHAR(10)|0</DataType>
+    </column>
+    <column id="124" parent="14" name="qq">
+      <Position>22</Position>
+      <DataType>VARCHAR(15)|0</DataType>
+    </column>
+    <column id="125" parent="14" name="school">
+      <Position>23</Position>
+      <DataType>VARCHAR(30)|0</DataType>
+    </column>
+    <column id="126" parent="14" name="student_no">
+      <Position>24</Position>
+      <DataType>VARCHAR(30)|0</DataType>
+    </column>
+    <key id="127" parent="14">
       <ColNames>uid</ColNames>
       <Primary>1</Primary>
     </key>
-    <check id="123" parent="14">
+    <check id="128" parent="14">
       <Predicate>email_confirmed IN (0, 1)</Predicate>
     </check>
-    <check id="124" parent="14">
+    <check id="129" parent="14">
       <Predicate>telephone_confirmed IN (0, 1)</Predicate>
     </check>
-    <check id="125" parent="14">
+    <check id="130" parent="14">
       <Predicate>student_auth IN (0, 1)</Predicate>
     </check>
   </database-model>

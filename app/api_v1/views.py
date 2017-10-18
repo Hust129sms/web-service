@@ -63,13 +63,14 @@ def get_token():
         if user is None:
             raise TimeoutError
         if user.verify_password(json_data['password']):
-            user.auth_token = get_auth_token()
+            user.auth_token = get_auth_token(json_data['email'])
             user.auth_token_expire = int(time() + 1800)
             db.session.add(user)
             return jsonify({
                 "status": 1,
                 "token": user.auth_token,
-                "expire_time": user.auth_token_expire
+                "expire_time": user.auth_token_expire,
+
             })
         else:
             return jsonify({
@@ -117,6 +118,12 @@ def get_user_info(user, id=1):
         'telephone_c': user.telephone_confirmed,
         'last': user.last_login_time,
         'student': user.student_auth,
+        "id_card": user.id_card[5:] + '*************' if user.id_card else "未输入",
+        "student_no": user.student_no or "未输入",
+        "school": user.school,
+        "qq": user.qq,
+        "username": user.username,
+        "log_level": user.log_level,
     }
     return jsonify(data)
 

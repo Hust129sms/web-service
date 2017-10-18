@@ -61,6 +61,14 @@ class User(UserMixin, db.Model):
                                        primaryjoin='PersonalMessage.rec_id==User.uid')
     auth_token = db.Column(db.String(128))
     auth_token_expire = db.Column(db.Integer, default=0)
+    # 个人数据
+    id_card = db.Column(db.String(18))
+    name = db.Column(db.String(10))
+    school = db.Column(db.String(30))
+    student_no = db.Column(db.String(30))
+    qq = db.Column(db.String(15))
+
+
     # 设置密码的可读属性
     @property
     def password(self):
