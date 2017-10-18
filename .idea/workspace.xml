@@ -6,8 +6,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ce9468c5-cdda-4753-ab31-9d62e1a012ee" name="Default" comment="Many changes.&#10;&#10;* Modified models/Form, change it belong to Group instead of User&#10;* Optimized models.&#10;* Add staticmethod for form to get object or get code&#10;* Add some rest_api&#10;* Optimized personal message">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dataSources/0d68dcd8-ceb0-480c-8590-8812ff8c147e/_metadata_/metadata" afterPath="$PROJECT_DIR$/.idea/dataSources/0d68dcd8-ceb0-480c-8590-8812ff8c147e/_metadata_/metadata" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/api_v1/views.py" afterPath="$PROJECT_DIR$/app/api_v1/views.py" />
     </list>
     <ignored path="fiiyu.iws" />
@@ -99,8 +97,8 @@
       <file leaf-file-name="views.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/api_v1/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="246">
-              <caret line="120" column="24" lean-forward="false" selection-start-line="120" selection-start-column="24" selection-end-line="120" selection-end-column="24" />
+            <state relative-caret-position="439">
+              <caret line="120" column="47" lean-forward="false" selection-start-line="120" selection-start-column="47" selection-end-line="120" selection-end-column="47" />
               <folding>
                 <element signature="e#0#56#0" expanded="true" />
               </folding>
@@ -970,8 +968,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/api_v1/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="246">
-          <caret line="120" column="24" lean-forward="false" selection-start-line="120" selection-start-column="24" selection-end-line="120" selection-end-column="24" />
+        <state relative-caret-position="439">
+          <caret line="120" column="47" lean-forward="false" selection-start-line="120" selection-start-column="47" selection-end-line="120" selection-end-column="47" />
           <folding>
             <element signature="e#0#56#0" expanded="true" />
           </folding>

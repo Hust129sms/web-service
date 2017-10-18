@@ -107,9 +107,9 @@ def get_balance(user, id=1):
     return jsonify({"balance": balance})
 
 
-@api_v1.route("/user", methods=['GET'])
+@api_v1.route("/user/<id>", methods=['GET'])
 @auth_required
-def get_user_info(user):
+def get_user_info(user, id=1):
     data = [{
         'email': user.email,
         'telephone': user.telephone,
@@ -118,7 +118,7 @@ def get_user_info(user):
         'last': user.last_login_time,
         'student': user.student_auth,
     }]
-    return jsonify(data)
+    return jsonify(data), {'Content-Range': 'posts 1-1/1'}
 
 
 @api_v1.route("/groups", methods=['POST'])
