@@ -118,14 +118,29 @@ def get_user_info(user, id=1):
         'telephone_c': user.telephone_confirmed,
         'last': user.last_login_time,
         'student': user.student_auth,
-        "id_card": user.id_card[5:] + '*************' if user.id_card else "未输入",
-        "student_no": user.student_no or "未输入",
+        "id_card": user.id_card[5:] + '*************' if user.id_card else None,
+        "student_no": user.student_no,
         "school": user.school,
         "qq": user.qq,
         "username": user.username,
         "log_level": user.log_level,
     }
     return jsonify(data)
+
+@api_v1.route("/user/<id>", methods=['PUT'])
+@auth_required
+def update_user_info(user, id=1):
+    static_record = ['id_card', 'telephone', 'last', 'student_no', 'email', 'username', 'email_c', 'telephone_c',
+                     'student']
+    try:
+        user_data = request.get_json()
+        for keys in user_data:
+            if keys not in static_record or not eval('user.' + keys) : #为可修改项或该记录为空
+                eval('user.' + keys + '=' + user_data[keys])
+        return jsonify({'msg': 'success'})
+    except:
+        return jsonify({'msg': 'fail'}), 400
+
 
 
 @api_v1.route("/groups", methods=['POST'])
