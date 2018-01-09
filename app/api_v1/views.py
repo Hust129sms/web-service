@@ -2,6 +2,7 @@ from flask import jsonify, request, json, abort, url_for
 from flask_login import current_user, login_required
 from time import time, strftime, localtime
 from functools import wraps
+import base64
 import urllib.parse
 
 from ..models import PersonalMessage, db, MessageRecord, User, Group, Member, ChargeRecord, Billing, SMSTpl, GroupMember, UploadFile
@@ -32,6 +33,10 @@ def auth_required(func):
             return abort(403)
         user = User.query.filter_by(auth_token=token).first()
         if user is not None:
+            token_origin = base64.b64decode(token.encode())
+            expire_time = token_origin.decode().split(":")[0]
+            if float(expire_time) < time():
+                abort(403)
             return func(user, *args, **kwargs)
         else:
             return abort(403)
