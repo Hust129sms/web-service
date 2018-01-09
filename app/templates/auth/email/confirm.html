@@ -2,7 +2,7 @@
 {% block content %}
 请点击以下链接激活：<p></p>
 <a href="{{ url_for('manage.confirm_token', token=token, _external=True) }}">点击此处</a><p></p>
+    或者将以下链接复制到你的浏览器中：<p/>
 {{ url_for('manage.confirm_token', token=token, _external=True) }}
 <p></p><p></p>
-飞羽运营团队
 {% endblock %}

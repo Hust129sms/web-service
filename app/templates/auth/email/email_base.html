@@ -1,7 +1,26 @@
-亲爱的{{ user.username }},<p></p>
-&nbsp;&nbsp;欢迎使用飞羽Fiiyu！<p></p>
-{% block content %}
+<div style="width:540px;color:#444;margin: 0 auto;border:1px solid #ddd"><img src="http://console.fiiyu.com/email.png" style="width:540px;height:320px;text-align:center;">
+<div style="width:420px;font-size:13px;text-align:left;margin:20px auto;line-height:1.8;padding-bottom:24px">
+<p>亲爱的{{ user.username }}：</p>
+&nbsp;&nbsp;&nbsp;&nbsp;欢迎使用飞羽！
+
+<h3 style="margin-top:20px;">&nbsp;</h3>
+ {% block content %}
 {% endblock %}
-<p></p>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;飞羽团队
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ time }}
+</div>
+<div style="text-align: right; font-size: 14px;">
+		飞羽运营团队<br />
+		{{ time }}
+</div>
+<div style="text-align: center; font-size: 14px;"><!-- img src="https://dn-bearychat.qbox.me/bearychat-email-footer.png" style="width: 111px; margin-bottom: 20px;"-->FIIYU
+<div style="margin-bottom: 20px;">
+<div>飞羽，你的云端短信管家</div>
+
+<div>为校园打造的沟通体验，让效率飞起来</div>
+</div>
+<!--img src="http://bearychat.qiniudn.com/premium/email/mail_qrcode.png" style="display:block;width: 100%;"-->
+<div style="margin-bottom: 80px; color: #B3B3B3;">
+<div>此邮件由服务器发送，请勿直接回复</div>
+</div>
+</div>
+</div>
+</div>

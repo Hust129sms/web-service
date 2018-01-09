@@ -1,6 +1,7 @@
 import time
 import base64
 import hmac
+import random
 
 
 def get_auth_token(key, expire=3600):
@@ -26,3 +27,14 @@ def show_type(type_number):
         return type_list[type_number]
     else:
         return type_number
+
+
+def createPhoneCode():
+    chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    x = random.choice(chars), random.choice(chars), random.choice(chars), random.choice(chars), random.choice(chars), random.choice(chars)
+    verify = "".join(x)
+    return verify
+
+
+def getpay(type, amount, id, token):
+    return "http://console.fiiiyu.com/charges/%s" % token

@@ -1,12 +1,24 @@
 from flask import jsonify, request, json, abort, url_for
 from flask_login import current_user, login_required
-from time import time
+from time import time, strftime, localtime
 from functools import wraps
 import urllib.parse
 
-from ..models import PersonalMessage, db, MessageRecord, User, Group, Member
+from ..models import PersonalMessage, db, MessageRecord, User, Group, Member, ChargeRecord, Billing, SMSTpl, GroupMember, UploadFile
 from . import api_v1
-from .tools import get_auth_token, show_type
+from .tools import get_auth_token, show_type, createPhoneCode, getpay
+from ..tools.mail_thread import send_email
+from ..tools.signals import send_verify_code
+import os
+
+
+@api_v1.after_request
+def add_header_response(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Expose-Headers', 'Content-Range')
+    return response
 
 
 # Decorator to get user object in the headers
@@ -92,15 +104,6 @@ def sms_response():
     return "0"
 
 
-@api_v1.after_request
-def add_header_response(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    response.headers.add('Access-Control-Expose-Headers', 'Content-Range')
-    return response
-
-
 @api_v1.route("/balance/<id>", methods=['GET'])
 @auth_required
 def get_balance(user, id=1):
@@ -108,163 +111,269 @@ def get_balance(user, id=1):
     return jsonify({"balance": balance})
 
 
+@api_v1.route("/user/", methods=['GET'])
 @api_v1.route("/user/<id>", methods=['GET'])
 @auth_required
 def get_user_info(user, id=1):
     data = {
+        'id': user.username,
         'email': user.email,
-        'telephone': user.telephone,
+        'telephone': user.telephone[:3] + '****' + user.telephone[-4:],
         'email_c': user.email_confirmed,
         'telephone_c': user.telephone_confirmed,
         'last': user.last_login_time,
         'student': user.student_auth,
-        "id_card": user.id_card[5:] + '*************' if user.id_card else None,
+        "id_card": user.id_card[:5] + '*************' if user.id_card else None,
         "student_no": user.student_no,
         "school": user.school,
         "qq": user.qq,
         "username": user.username,
         "log_level": user.log_level,
+        "name": user.name,
     }
     return jsonify(data)
+
 
 @api_v1.route("/user/<id>", methods=['PUT'])
 @auth_required
 def update_user_info(user, id=1):
     static_record = ['id_card', 'telephone', 'last', 'student_no', 'email', 'username', 'email_c', 'telephone_c',
                      'student']
+    map_table = {
+        "telephone_c": "telephone_confirmed",
+        "email_c": "email_confirmed",
+        "student": "student_auth",
+        "last": "last_login_time"
+    }
     try:
         user_data = request.get_json()
-        for keys in user_data:
-            if keys not in static_record or not eval('user.' + keys) : #为可修改项或该记录为空
-                eval('user.' + keys + '=' + user_data[keys])
-        return jsonify({'msg': 'success'})
+
     except:
         return jsonify({'msg': 'fail'}), 400
 
+    for keys in user_data:
+        key = keys if keys not in map_table else map_table[keys]
+        if user_data[keys] and (keys not in static_record or not user[key]):#为可修改项或该记录为空
+            exec('user.' + key + '="' + user_data[keys] + '"')
+    return jsonify({'msg': 'success'})
 
-
-@api_v1.route("/groups", methods=['POST'])
-@auth_required
-def create_group(user):
-    try:
-        group_data = request.get_json()
-    except:
-        return jsonify({'status': 'fail'}), 400
-    # TODO codes to create group
-    try:
-        group = Group(iid=Group.query.filter_by(owner_id=user.uid).sort_by(Group.iid.desc()).first().iid + 1)
-    except:
-        group = Group(iid=1, owner_id=user.uid)
-    try:
-        # TODO code to add data to database
-        group.name = group_data['group_name']
-        try:
-            group.type = {"Association": 0, "Student_union": 1, "Team": 2, "Classes": 3, "Collage": 4, "Match": 5}[group_data['group_type']]
-        except KeyError:
-            group.type = -1
-        group.tel = group_data['telephone']
-    except:
-        return jsonify({'status': 'error'}), 400
-    db.session.add(group)
-    db.session.commit()
-    return jsonify({'status': 'success'}), 201, {'Location': url_for('api_v1.get_one_group', id = group.id)}
-
-
-@api_v1.route("/groups", methods=['GET'])
-@api_v1.route("/products", methods=['GET'])
-@auth_required
-def get_group_list(user):
-    sort = request.args.get('sort')
-    range = request.args.get('range')
-    filter = request.args.get('filter')
-    sort_l = list(eval(sort))
-    range = list(eval(range))
-    sort_i = Group.id
-    if sort_l[1] == 'DESC':
-        if sort_l[0] == 'id':
-            sort_i = Group.iid.desc()
-        elif sort_l[0] == 'name':
-            sort_i = Group.name.desc()
-        elif sort_l[0] == 'type':
-            sort_i = Group.type.desc()
-        elif sort_l[0] == 'balance':
-            sort_i = Group.balance.desc()
-        elif sort_l[0] == 'members':
-            sort_i = Group.member_c.desc()
-    else:
-        if sort_l[0] == 'id':
-            sort_i = Group.iid.asc()
-        elif sort_l[0] == 'name':
-            sort_i = Group.name.asc()
-        elif sort_l[0] == 'type':
-            sort_i = Group.type.asc()
-        elif sort_l[0] == 'balance':
-            sort_i = Group.balance.asc()
-        elif sort_l[0] == 'members':
-            sort_i = Group.member_c.asc()
-    groups = Group.query.filter_by(owner_id=user.uid).order_by(sort_i).offset(range[0]).limit(range[1] - range[0]).all()
-    datas = []
-    for group in groups:
-        group_data = {
-            'id': group.iid,
-            'name': group.name,
-            'balance': str(group.balance/100) + '元',
-            'type': show_type(group.type),
-            'manager_telephone': group.tel or group.Owner.telephone,
-            'role_json': group.role_json,
-            'description': group.name,
-            'members': group.member_c
-        }
-        datas.append(group_data)
-    max_counter = Group.query.filter_by(owner_id=user.uid).count()
-    if max_counter < range[1]:
-        range[1] = max_counter
-    return jsonify(datas), {'Content-Range': 'posts ' + str(range[0]) + '-' +
-                                                                           str(range[1]) + '/' + str(max_counter)}
-
-
-@api_v1.route('/groups/<int:id>', methods=['GET'])
-@auth_required
-def get_one_group(user, id):
-    group = Group.query.filter_by(owner_id=user.uid).filter_by(iid=id).first()
-    if group is None:
-        return jsonify({'status': 'not found'}), 404
-    return jsonify(
-        {
-            'id': group.iid,
-            'group_name': group.name,
-            'group_type': group.type,
-            'telephone': group.tel or group.Owner.telephone,
-            'description': group.name,
-            'members': group.member_c
-        }
-    )
-    pass
-
-
-@api_v1.route('/groups/<int:id>', methods=['PUT'])
-@auth_required
-def update_one_group(user, id):
-    group = Group.query.filter_by(owner_id=user.uid).filter_by(iid=id).first()
-    group_data = request.get_json()
-    if group is None:
-        return jsonify({'status': 'not found'}), 404
-    # TODO code for modify group
-    return jsonify({'status': 'success'}), 200
-
-
-@api_v1.route('/groups/<int:id>', methods=['DELETE'])
-@auth_required
-def delete_one_group(user, id):
-    group = Group.query.filter_by(owner_id=user.uid).filter_by(iid=id).first()
-    if group is None:
-        return jsonify({'status': 'not found'}), 404
-    db.session.remove(group)
-    return jsonify({'status': 'success'}), 200
 
 def create_products():
     print(request.get_json())
     return jsonify({'status': 'success'})
 
 
+@api_v1.route('/check_email/<id>', methods=['GET'])
+@auth_required
+def check_email(user, id):
+    token = user.generate_confirmation_token()
+    send_email(user.email, '确认你的邮箱', 'auth/email/confirm', user=user, token=token,
+                time=strftime("%Y-%m-%d %H:%M:%S"))
+    return jsonify({'status': 'success'})
 
+
+@api_v1.route('/send_sms/<id>', methods=['GET'])
+@auth_required
+def send_auth_sms(user, id):
+    if id == 'send_sms':
+        if user.telephone_confirmed :
+            return jsonify({'msg': 'forbidden'}), 403
+        if time() - user.telephone_confirmed_code_time < 60:
+            return jsonify({'msg': 'please wait', 'time': int(time() - user.telephone_confirmed_code_time)}), 403
+        user.telephone_confirmed_code = createPhoneCode()
+        user.telephone_confirmed_code_time = time()
+        send_verify_code.delay(user.telephone, os.environ.get('API_KEY'), os.environ.get('TPL_ID'),
+                               code=user.telephone_confirmed_code)
+        return jsonify({'msg': 'success'})
+    if id[:12] == 'unlock_group':
+        if time() - user.telephone_confirmed_code_time < 60:
+            return jsonify({'msg': 'please wait', 'time': int(time() - user.telephone_confirmed_code_time)}), 403
+        user.telephone_confirmed_code = createPhoneCode()
+        user.telephone_confirmed_code_time = time()
+        group = Group.query.filter_by(iid=id[13:], owner_id=user.uid).first()
+        if group is None:
+            return jsonify({'msg': 'not found'})
+        send_verify_code.delay(user.telephone, os.environ.get('API_KEY'), os.environ.get('TPL_ID_2'),
+                               group=group.name, code=user.telephone_confirmed_code)
+        return jsonify({'msg': 'success'})
+
+@api_v1.route('/confirm_sms/<id>', methods=['GET'])
+@auth_required
+def confirm_sms(user, id):
+    if user.telephone_confirmed:
+        return jsonify({'msg': 'forbidden'}), 403
+    if time() - user.telephone_confirmed_code_time > 60:
+        return jsonify({'msg': 'code timeout'}), 403
+    if user.telephone_confirmed_code == id:
+        user.telephone_confirmed = True
+        return jsonify({'msg': 'success'})
+    else:
+        return jsonify({'msg': 'wrong number'}), 404
+
+
+@api_v1.route('/charge_group/<iid>-<amount>',methods=['GET'])
+@auth_required
+def charge_group(user, iid, amount):
+    iid = int(iid)
+    amount = int(float(amount) * 100)
+    group = Group.query.filter_by(owner_id=user.uid, iid=iid).first()
+    if group is None:
+        return jsonify({'msg': 'error', 'error': '找不到圈子'}), 404
+    if amount > user.balance:
+        return jsonify({'msg': 'error', 'error': '账户余额不足'}), 400
+    bill = ChargeRecord(amount=amount/100, out_account_id=user.uid, in_group_id=group.id, deal_state=1)
+    db.session.add(bill)
+    user.balance -= amount
+    group.balance += amount
+    db.session.add(user)
+    db.session.add(group)
+    return jsonify({'msg': 'success'})
+
+
+@api_v1.route('/charge_group_history', methods=['GET'])
+@auth_required
+def charge_group_history(user):
+    range = json.loads(request.args.get('range'))
+    bills = ChargeRecord.query.filter_by(out_account_id=user.uid).order_by(ChargeRecord.time.desc()).offset(range[0]).limit(range[1] - range[0]).all()
+    datas = []
+    for bill in bills:
+        data = {
+            'amount': '%.2f元' % bill.amount,
+            'in_group': Group.query.filter_by(id=bill.in_group_id).first().name,
+            'time': strftime("%Y-%m-%d %H:%M:%S", localtime(bill.time)),
+            'id': bill.id,
+        }
+        datas.append(data)
+    max_counter = ChargeRecord.query.filter_by(out_account_id=user.uid).count()
+    if max_counter < range[1]:
+        range[1] = max_counter
+    return jsonify(datas), {'Content-Range': 'posts ' + str(range[0]) + '-' +
+                                             str(range[1]) + '/' + str(max_counter)}
+
+
+@api_v1.route('/bills', methods=['GET'])
+@auth_required
+def get_bills(user):
+    range = json.loads(request.args.get('range'))
+    bills = Billing.query.filter_by(user_id=user.uid).order_by(Billing.create_time.desc()).offset(range[0]).limit(range[1]-range[0]).all()
+    datas = []
+    type = ['支付宝', '微信', '人工', '网银']
+    status = ['', '待支付⌛️', '已支付☑️', '完成✅', '已关闭⛔️']
+    for bill in bills:
+        data = {
+            'amount': '%.2f元' % bill.amount,
+            'type': type[int(bill.status / 10)],
+            'time': strftime("%Y-%m-%d %H:%M:%S", localtime(bill.finish_time or bill.create_time)),
+            'id': bill.id,
+            'status': status[bill.status % 10]
+        }
+        datas.append(data)
+    max_counter = Billing.query.filter_by(user_id=user.uid).count()
+    if max_counter < range[1]:
+        range[1] = max_counter
+    return jsonify(datas), {'Content-Range': 'posts ' + str(range[0]) + '-' +
+                                             str(range[1]) + '/' + str(max_counter)}
+
+
+@api_v1.route('/bills/<amount>-<type>', methods=['GET'])
+@auth_required
+def charge(user, amount, type):
+    types = ['支付宝', '微信', '人工', '网银']
+    bill = Billing(status=int(type)*10+1, user_id=user.uid, amount=amount,
+                   token=get_auth_token("%s,%d" % (types[int(type)], int(amount)), 3600))
+    db.session.add(bill)
+    db.session.commit()
+    getpay(type, amount, bill.id, bill.token)
+    return jsonify({'msg': 'success', 'url': getpay(type, amount, bill.id, bill.token)})
+
+
+@api_v1.route('/members/<id>',methods=['GET'])
+@auth_required
+def get_member_list(user, id):
+    group = Group.query.filter_by(iid=id, owner_id=user.uid).first()
+    if group is None:
+        return jsonify({'msg': 'not found'}), 404
+    members = GroupMember.query.filter_by(group_id=group.id).first()
+    if members is None:
+        return jsonify([
+            ['', '', '', '', ''],
+        ])
+    if members.valid_time + 1800 < time():
+        return jsonify({'msg': 'auth required'}), 401
+    return jsonify(json.loads(members.data))
+
+
+@api_v1.route('/unlock/<g_id>/<code>')
+@auth_required
+def unlock_g_with_tel(user, g_id, code):
+    if user.telephone_confirmed_code == code and user.telephone_confirmed_code_time + 300 > time():
+        user.telephone_confirmed = True
+        group = Group.query.filter_by(iid=g_id, owner_id=user.uid).first()
+        if group is None:
+            return jsonify({'msg': 'not found'}), 404
+        members = GroupMember.query.filter_by(group_id=group.id).first()
+        members.valid_time = time()
+        return jsonify({'msg': 'success'})
+    return jsonify({'msg': 'not found'}), 404
+
+
+@api_v1.route('/members/<id>', methods=['PUT'])
+@auth_required
+def save_member_list(user, id):
+    group = Group.query.filter_by(iid=id, owner_id=user.uid).first()
+    if group is None:
+        return jsonify({'msg': 'not found'}), 404
+    members = GroupMember.query.filter_by(group_id=group.id).first()
+    if members is not None:
+        if members.valid_time + 1800 < time():
+            return jsonify({'msg': 'auth required'}), 401
+        member_list = json.loads(request.data)
+        result = []
+        for row in member_list:
+            empty = True
+            result.append(row)
+            for col in row:
+                if col is not None and col != '' and col != ' ':
+                    empty = False
+                    break
+            if empty:
+                result.pop()
+        if len(result) == 0:
+            result = [['', '', '', '', '']]
+        members.data = json.dumps(result)
+    else:
+        members = GroupMember(data=json.dumps(json.loads(request.data)), group_id=group.id)
+        db.session.add(members)
+    return jsonify({'msg': 'success'})
+
+
+@api_v1.route('/members/set_file/<filename>')
+@auth_required
+def set_members_from_file(user, filename):
+    upload = UploadFile.query.filter_by(name=filename).first()
+    if upload is None or (upload.owner_id != user.uid and upload.owner_id != 0):
+        return jsonify({'msg': 'not found'}), 404
+    upload.owner_id = user.uid
+    db.session.add(upload)
+    data = json.loads(upload.data)
+    return jsonify(
+        {
+            'record': len(data),
+        }
+    )
+
+
+@api_v1.route('/members/file_confirm/<filename>/<g_id>')
+@auth_required
+def confirm_file(user, filename, g_id):
+    upload = UploadFile.query.filter_by(name=filename, owner_id=user.uid).first()
+    group = Group.query.filter_by(owner_id=user.uid, iid=g_id).first()
+    if group is None:
+        return jsonify({'msg': 'not found'}), 404
+    member_list = GroupMember.query.filter_by(group_id=group.id).first()
+    if member_list is None:
+        member_list = GroupMember(group_id=group.id)
+    member_list.data = upload.data
+    db.session.add(member_list)
+    db.session.delete(upload)
+    return jsonify({'msg': 'success'}), 200

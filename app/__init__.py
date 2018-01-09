@@ -8,6 +8,7 @@ from flask_login import LoginManager
 from flask_openid import OpenID
 from flask_oauthlib.client import OAuth
 from flask_principal import Principal, Permission, RoleNeed, identity_loaded
+from flask_celery import Celery
 
 
 bootstrap = Bootstrap()
@@ -15,6 +16,7 @@ mail = Mail()
 moment = Moment()
 db = SQLAlchemy()
 oid = OpenID()
+celery = Celery()
 principal = Principal()
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'

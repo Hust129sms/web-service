@@ -106,7 +106,7 @@ class User(UserMixin, db.Model):
 #   确认邮箱验证令牌
     def confirm(self, token):
         # token不是最后生成的有效token
-        if token != self.useful_token.decode('utf-8'):
+        if token != self.useful_token:
             return False
         s = Serializer(current_app.config['SECRET_KEY'])
         # 核对令牌
@@ -201,12 +201,18 @@ class Group(db.Model):
     balance = db.Column(db.Integer, default=0)
     charge_record = db.relationship('ChargeRecord', backref='Group')
     member = db.relationship('Member', backref='Group')
+    tpl = db.relationship('SMSTpl', backref='Group')
     image = db.Column(db.LargeBinary)
     type = db.Column(db.Integer)
     role_json = db.Column(db.Text, default='{"-1":"所有者","5":"部长","0":"会员"}')
     tel = db.Column(db.String(11))
     owned_form_id = db.relationship('Form', backref='Owner')
     member_c = db.Column(db.Integer, default=0)
+    short_name = db.Column(db.String(128))
+    description = db.Column(db.String)
+    manager_name = db.Column(db.String(20))
+    email = db.Column(db.String(256))
+    tel_public = db.Column(db.Boolean)
 
     def get_balance(self):
         return self.balance / 1000
@@ -332,3 +338,32 @@ class PersonalMessage(db.Model):
     from_id = db.Column(db.Integer, db.ForeignKey('users.uid'))
     message = db.Column(db.Text)
     title = db.Column(db.String(128))
+
+
+class SMSTpl(db.Model):
+    __tablename__ = 'smstpls'
+    id = db.Column(db.Integer, primary_key=True)
+    time = db.Column(db.Integer, default=time.time)
+    status = db.Column(db.Integer, default=0)
+    group_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
+    content = db.Column(db.String)
+    title = db.Column(db.String(64))
+    reason = db.Column(db.String(64))
+
+
+class GroupMember(db.Model):
+    __tablename__ = 'group_members'
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.String)
+    data_backup = db.Column(db.String)
+    group_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
+    valid_time = db.Column(db.Integer, default=time.time)
+
+
+class UploadFile(db.Model):
+    __tablename__ = 'uploads'
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.String)
+    name = db.Column(db.String)
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.uid'), default=0)
+    create_time = db.Column(db.Integer, default=time.time)

@@ -6,13 +6,18 @@ import base64
 from ..models import Group, db, PersonalMessage
 from random import randint
 import time
+import os
+import xlrd
+from werkzeug.utils import secure_filename
+import random
+import json
 from ..decorators import own_required
 
 from . import manage
 from .forms import EnableForm, CreateGroupForm
 from ..models import Group, Member, Billing
 from .. import db
-from ..models import User
+from ..models import User, UploadFile
 
 
 @manage.route('/', methods=['GET', 'POST'])
@@ -46,15 +51,18 @@ def console():
 
 
 @manage.route('/confirm/<token>')
-@login_required
 def confirm_token(token):
-    if current_user.email_confirmed:
-        return redirect(url_for('manage.index'))
-    if current_user.confirm(token):
+    token = token.encode(encoding="utf-8")
+    user = User.query.filter_by(useful_token=token).first()
+    if user is None:
+        abort(404)
+    if user.email_confirmed:
+        return redirect('https://console.fiiyu.com')
+    if user.confirm(token):
         flash(u"邮箱验证成功！")
     else:
         flash(u"验证链接非法或过期！请重新获取！")
-    return redirect(url_for('manage.index'))
+    return redirect('https://console.fiiyu.com')
 
 
 @manage.route('/confirm', methods=['GET', 'POST'])
@@ -188,7 +196,7 @@ def charge_response(token):
     bill = Billing.query.filter_by(token=token, status=1).first()
     if bill is None:
         return jsonify({"message": "error"})
-    bill.User.balance += bill.amount * 1000
+    bill.User.balance += bill.amount * 100
     bill.status = 2
     bill.finish_time = time.time()
     pm = PersonalMessage(rec_id=bill.User.uid, from_id=0, message="您已充值成功！%d元已存入您的账户！", title="充值成功")
@@ -204,4 +212,29 @@ def view_billings():
     bill = Billing.query.filter_by(User=current_user).all()
     return render_template("manage/view_billings.html", bill=bill)
 
+
+@manage.route("/uploads/xls", methods=["POST"])
+def upload_xls():
+    files = request.files['file']
+    filename = ''.join(random.sample('aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ1234567890-=', 30))\
+               + secure_filename(files.filename)
+    try:
+        os.mkdir(os.path.join('/tmp/uploads/'))
+    except Exception:
+        pass
+    files.save(os.path.join('/tmp/uploads/') + filename)
+    try:
+        excel = xlrd.open_workbook(os.path.join('/tmp/uploads/') + filename)
+        table = excel.sheets()[0]
+        data = []
+        for i in range(table.nrows):
+            data.append(table.row_values(i))
+        data.pop(0)
+        upload = UploadFile(name=filename, data=json.dumps(data))
+        db.session.add(upload)
+    except Exception:
+        return jsonify({'msg': 'invalid file'}), 400
+    finally:
+        os.remove(os.path.join('/tmp/uploads/') + filename)
+    return jsonify({'file': filename}), 200, {'Access-Control-Allow-Origin': '*'}
 
