@@ -106,7 +106,9 @@ class User(UserMixin, db.Model):
 #   确认邮箱验证令牌
     def confirm(self, token):
         # token不是最后生成的有效token
+        token = str(token, encoding='utf-8')
         if token != self.useful_token:
+            print('not useful')
             return False
         s = Serializer(current_app.config['SECRET_KEY'])
         # 核对令牌
@@ -209,7 +211,7 @@ class Group(db.Model):
     owned_form_id = db.relationship('Form', backref='Owner')
     member_c = db.Column(db.Integer, default=0)
     short_name = db.Column(db.String(128))
-    description = db.Column(db.String)
+    description = db.Column(db.Text)
     manager_name = db.Column(db.String(20))
     email = db.Column(db.String(256))
     tel_public = db.Column(db.Boolean)
@@ -346,7 +348,7 @@ class SMSTpl(db.Model):
     time = db.Column(db.Integer, default=time.time)
     status = db.Column(db.Integer, default=0)
     group_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
-    content = db.Column(db.String)
+    content = db.Column(db.Text)
     title = db.Column(db.String(64))
     reason = db.Column(db.String(64))
 
@@ -354,16 +356,18 @@ class SMSTpl(db.Model):
 class GroupMember(db.Model):
     __tablename__ = 'group_members'
     id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.String)
-    data_backup = db.Column(db.String)
+    data = db.Column(db.Text)
+    data_backup = db.Column(db.Text)
     group_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
     valid_time = db.Column(db.Integer, default=time.time)
+    data_format = db.Column(db.Text)
+    download_token = db.Column(db.String(12))
 
 
 class UploadFile(db.Model):
     __tablename__ = 'uploads'
     id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.String)
-    name = db.Column(db.String)
+    data = db.Column(db.Text)
+    name = db.Column(db.Text)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.uid'), default=0)
     create_time = db.Column(db.Integer, default=time.time)

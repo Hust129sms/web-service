@@ -11,6 +11,7 @@ import xlrd
 from werkzeug.utils import secure_filename
 import random
 import json
+from io import BytesIO
 from ..decorators import own_required
 
 from . import manage
@@ -59,6 +60,7 @@ def confirm_token(token):
     if user.email_confirmed:
         return redirect('https://console.fiiyu.com')
     if user.confirm(token):
+        user.email_confirmed = True
         flash(u"邮箱验证成功！")
     else:
         flash(u"验证链接非法或过期！请重新获取！")
@@ -216,15 +218,13 @@ def view_billings():
 @manage.route("/uploads/xls", methods=["POST"])
 def upload_xls():
     files = request.files['file']
+    byteio = BytesIO()
     filename = ''.join(random.sample('aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ1234567890-=', 30))\
                + secure_filename(files.filename)
+    files.save(byteio)
     try:
-        os.mkdir(os.path.join('/tmp/uploads/'))
-    except Exception:
-        pass
-    files.save(os.path.join('/tmp/uploads/') + filename)
-    try:
-        excel = xlrd.open_workbook(os.path.join('/tmp/uploads/') + filename)
+        byteio.seek(0)
+        excel = xlrd.open_workbook(file_contents=byteio.getvalue())
         table = excel.sheets()[0]
         data = []
         for i in range(table.nrows):
@@ -235,6 +235,7 @@ def upload_xls():
     except Exception:
         return jsonify({'msg': 'invalid file'}), 400
     finally:
-        os.remove(os.path.join('/tmp/uploads/') + filename)
+        byteio.close()
+        byteio = None
     return jsonify({'file': filename}), 200, {'Access-Control-Allow-Origin': '*'}
 

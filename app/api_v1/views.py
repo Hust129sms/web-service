@@ -158,8 +158,8 @@ def update_user_info(user, id=1):
 
     for keys in user_data:
         key = keys if keys not in map_table else map_table[keys]
-        if user_data[keys] and (keys not in static_record or not user[key]):#为可修改项或该记录为空
-            exec('user.' + key + '="' + user_data[keys] + '"')
+        if user_data[keys] and (keys not in static_record or exec('user.' + key + ' is not None')):#为可修改项或该记录为空
+            exec('user.' + key + '="' + str(user_data[keys]) + '"')
     return jsonify({'msg': 'success'})
 
 
@@ -172,6 +172,7 @@ def create_products():
 @auth_required
 def check_email(user, id):
     token = user.generate_confirmation_token()
+
     send_email(user.email, '确认你的邮箱', 'auth/email/confirm', user=user, token=token,
                 time=strftime("%Y-%m-%d %H:%M:%S"))
     return jsonify({'status': 'success'})
@@ -201,6 +202,7 @@ def send_auth_sms(user, id):
         send_verify_code.delay(user.telephone, os.environ.get('API_KEY'), os.environ.get('TPL_ID_2'),
                                group=group.name, code=user.telephone_confirmed_code)
         return jsonify({'msg': 'success'})
+
 
 @api_v1.route('/confirm_sms/<id>', methods=['GET'])
 @auth_required
@@ -292,22 +294,6 @@ def charge(user, amount, type):
     return jsonify({'msg': 'success', 'url': getpay(type, amount, bill.id, bill.token)})
 
 
-@api_v1.route('/members/<id>',methods=['GET'])
-@auth_required
-def get_member_list(user, id):
-    group = Group.query.filter_by(iid=id, owner_id=user.uid).first()
-    if group is None:
-        return jsonify({'msg': 'not found'}), 404
-    members = GroupMember.query.filter_by(group_id=group.id).first()
-    if members is None:
-        return jsonify([
-            ['', '', '', '', ''],
-        ])
-    if members.valid_time + 1800 < time():
-        return jsonify({'msg': 'auth required'}), 401
-    return jsonify(json.loads(members.data))
-
-
 @api_v1.route('/unlock/<g_id>/<code>')
 @auth_required
 def unlock_g_with_tel(user, g_id, code):
@@ -321,64 +307,3 @@ def unlock_g_with_tel(user, g_id, code):
         return jsonify({'msg': 'success'})
     return jsonify({'msg': 'not found'}), 404
 
-
-@api_v1.route('/members/<id>', methods=['PUT'])
-@auth_required
-def save_member_list(user, id):
-    group = Group.query.filter_by(iid=id, owner_id=user.uid).first()
-    if group is None:
-        return jsonify({'msg': 'not found'}), 404
-    members = GroupMember.query.filter_by(group_id=group.id).first()
-    if members is not None:
-        if members.valid_time + 1800 < time():
-            return jsonify({'msg': 'auth required'}), 401
-        member_list = json.loads(request.data)
-        result = []
-        for row in member_list:
-            empty = True
-            result.append(row)
-            for col in row:
-                if col is not None and col != '' and col != ' ':
-                    empty = False
-                    break
-            if empty:
-                result.pop()
-        if len(result) == 0:
-            result = [['', '', '', '', '']]
-        members.data = json.dumps(result)
-    else:
-        members = GroupMember(data=json.dumps(json.loads(request.data)), group_id=group.id)
-        db.session.add(members)
-    return jsonify({'msg': 'success'})
-
-
-@api_v1.route('/members/set_file/<filename>')
-@auth_required
-def set_members_from_file(user, filename):
-    upload = UploadFile.query.filter_by(name=filename).first()
-    if upload is None or (upload.owner_id != user.uid and upload.owner_id != 0):
-        return jsonify({'msg': 'not found'}), 404
-    upload.owner_id = user.uid
-    db.session.add(upload)
-    data = json.loads(upload.data)
-    return jsonify(
-        {
-            'record': len(data),
-        }
-    )
-
-
-@api_v1.route('/members/file_confirm/<filename>/<g_id>')
-@auth_required
-def confirm_file(user, filename, g_id):
-    upload = UploadFile.query.filter_by(name=filename, owner_id=user.uid).first()
-    group = Group.query.filter_by(owner_id=user.uid, iid=g_id).first()
-    if group is None:
-        return jsonify({'msg': 'not found'}), 404
-    member_list = GroupMember.query.filter_by(group_id=group.id).first()
-    if member_list is None:
-        member_list = GroupMember(group_id=group.id)
-    member_list.data = upload.data
-    db.session.add(member_list)
-    db.session.delete(upload)
-    return jsonify({'msg': 'success'}), 200

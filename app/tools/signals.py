@@ -46,3 +46,4 @@ def send_verify_code(tel, key, id, **kwargs):
     for keys in kwargs:
         tpl_value['#%s#' % keys] = kwargs[keys]
     print(tpl_send_sms(key, id, tpl_value, tel).decode())
+    print(tel)

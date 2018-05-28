@@ -1,6 +1,8 @@
 from . import api_v1
 
-from flask import jsonify, request, json, url_for
+from flask import jsonify, request, json, url_for, make_response
+from io import BytesIO
+import xlwt
 
 from .views import auth_required
 from ..models import db, Group, Member, ChargeRecord
@@ -16,7 +18,8 @@ def create_group(user):
         return jsonify({'status': 'fail'}), 400
     # TODO codes to create group
     try:
-        group = Group(iid=Group.query.filter_by(owner_id=user.uid).sort_by(Group.iid.desc()).first().iid + 1)
+        iid = Group.query.filter_by(owner_id=user.uid).order_by(Group.iid.desc()).first().iid
+        group = Group(iid=iid + 1, owner_id=user.uid)
     except:
         group = Group(iid=1, owner_id=user.uid)
     try:
@@ -28,14 +31,14 @@ def create_group(user):
             group.type = -1
         group.tel = group_data['telephone']
         group.short_name = group_data['group_shortname']
-        group.description = group_data['description']
+        group.description = group_data['group_description']
         group.manager_name = group_data['manager_name']
         group.email = group_data['email']
     except:
         return jsonify({'status': 'error'}), 400
     db.session.add(group)
     db.session.commit()
-    return jsonify({'status': 'success'}), 201, {'Location': url_for('api_v1.get_one_group', id = group.id)}
+    return jsonify({'status': 'success'}), 201, {'Location': url_for('api_v1.get_one_group', id = group.iid)}
 
 
 @api_v1.route("/groups", methods=['GET'])
