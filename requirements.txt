@@ -50,7 +50,7 @@ M2Crypto==0.32.0
 Mako==1.0.7
 MarkupSafe==1.1.1
 monotonic==1.5
-numpy==1.16.2
+numpy==1.22.0
 oauth2==1.9.0.post1
 oauthlib==3.0.1
 pandas==0.24.1
