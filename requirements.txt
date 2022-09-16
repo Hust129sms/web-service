@@ -47,7 +47,7 @@ jwt==0.6.1
 kombu==4.4.0
 lml==0.0.9
 M2Crypto==0.32.0
-Mako==1.0.7
+Mako==1.2.2
 MarkupSafe==1.1.1
 monotonic==1.5
 numpy==1.16.2
